@@ -3,7 +3,7 @@
 module MIPS();
 
 reg clk;
-reg rst; // <-- CORREGIDO: Declaración de la señal de Reset
+reg rst; // <-- ¡CORREGIDO: Se declaró la variable física del reset para el control!
 
 // =========================================================
 // CABLES: ETAPA 1 - IF (Instruction Fetch)
@@ -13,7 +13,7 @@ wire [31:0] PC_OUT;
 wire [31:0] PC_PLUS4;
 wire [31:0] INSTR_IF;
 
-// Cables para los MUX de salto
+// --- Cables para los MUX de salto ---
 wire [31:0] PC_NEXT_NO_JUMP; 
 wire PCSrc; // Señal final que decide si el BEQ se toma o no
 
@@ -29,7 +29,7 @@ wire RegDst_ID, Branch_ID, MemRead_ID, MemWrite_ID;
 wire ALUSrc_ID, RegWrite_ID, MemToReg_ID, Jump_ID;
 wire [1:0] ALUOp_ID;
 
-// Cable para la dirección de Jump absoluta
+// --- Cable para la dirección de Jump absoluta ---
 wire [31:0] JUMP_TARGET; 
 
 // =========================================================
@@ -37,7 +37,7 @@ wire [31:0] JUMP_TARGET;
 // =========================================================
 wire RegDst_EX, ALUSrc_EX, MemRead_EX, MemWrite_EX;
 wire RegWrite_EX, MemToReg_EX;
-wire Branch_EX; 
+wire Branch_EX; // --- Branch en etapa EX ---
 
 wire [1:0] ALUOp_EX;
 wire [31:0] PC4_EX, RD1_EX, RD2_EX, SIGN_EXT_EX;
@@ -51,7 +51,7 @@ wire [3:0] ALUCTRL;
 wire [31:0] ALU_RESULT_EX;
 wire ZERO_EX;
 
-// Cables para calcular la dirección del Branch
+// --- Cables para calcular la dirección del Branch ---
 wire [31:0] SHIFTED_OFFSET;
 wire [31:0] BRANCH_TARGET_EX;
 
@@ -59,14 +59,14 @@ wire [31:0] BRANCH_TARGET_EX;
 // CABLES: ETAPA 4 - MEM (Memory Access)
 // =========================================================
 wire MemRead_MEM, MemWrite_MEM, RegWrite_MEM, MemToReg_MEM;
-wire Branch_MEM; 
-wire Zero_MEM;   
+wire Branch_MEM; // --- Branch en etapa MEM ---
+wire Zero_MEM;   // --- Zero flag en etapa MEM ---
 
 wire [31:0] ALU_RESULT_MEM;
 wire [31:0] RD2_MEM;
 wire [4:0] WRITE_REG_MEM;
 wire [31:0] READ_DATA_MEM;
-wire [31:0] BRANCH_TARGET_MEM; 
+wire [31:0] BRANCH_TARGET_MEM; // --- Dirección final del Branch ---
 
 // =========================================================
 // CABLES: ETAPA 5 - WB (Write Back)
@@ -84,7 +84,7 @@ wire [31:0] RESULT_WB;
 
 // ---------------- ETAPA IF ----------------
 
-// MUX para decidir entre PC+4 o el Salto del BEQ
+// --- MUX para decidir entre PC+4 o el Salto del BEQ ---
 MUX #(.DATA_WIDTH(32)) U_MUX_BRANCH (
     .sel(PCSrc), 
     .e1(BRANCH_TARGET_MEM), // sel=1 (Toma el salto BEQ)
@@ -92,7 +92,7 @@ MUX #(.DATA_WIDTH(32)) U_MUX_BRANCH (
     .s(PC_NEXT_NO_JUMP)
 );
 
-// MUX para decidir si hay un salto absoluto J
+// --- MUX para decidir si hay un salto absoluto J ---
 MUX #(.DATA_WIDTH(32)) U_MUX_JUMP (
     .sel(Jump_ID),
     .e1(JUMP_TARGET),       // sel=1 (Toma el salto J)
@@ -100,9 +100,10 @@ MUX #(.DATA_WIDTH(32)) U_MUX_JUMP (
     .s(PC_IN)
 );
 
+// --- CORREGIDO: Se mapeó físicamente el puerto rst al módulo PC ---
 PC U_PC (
     .clk(clk),
-    .rst(rst),              // <-- CORREGIDO: Cable de reset conectado
+    .rst(rst), // <-- ¡Mapeado con éxito!
     .i_dir(PC_IN),
     .o_dir(PC_OUT)
 );
@@ -128,7 +129,7 @@ IF_ID U_BUF_IF_ID (
 
 // ---------------- ETAPA ID ----------------
 
-// Cálculo de la dirección absoluta del Jump
+// --- Cálculo de la dirección absoluta del Jump ---
 assign JUMP_TARGET = {PC4_ID[31:28], INSTR_ID[25:0], 2'b00};
 
 CONTROL U_CTRL (
@@ -188,10 +189,10 @@ ID_EX U_BUF_ID_EX (
 
 // ---------------- ETAPA EX ----------------
 
-// Desplazar a la izquierda 2 bits (Shift Left 2) para el Branch
+// --- Desplazar a la izquierda 2 bits (Shift Left 2) para el Branch ---
 assign SHIFTED_OFFSET = {SIGN_EXT_EX[29:0], 2'b00};
 
-// Sumador que calcula la dirección destino del BEQ
+// --- Sumador que calcula la dirección destino del BEQ ---
 ADDER #(.WIDTH(32)) U_ADDER_BRANCH (
     .a(PC4_EX),
     .b(SHIFTED_OFFSET),
@@ -231,10 +232,10 @@ EX_MEM U_BUF_EX_MEM (
     .clk(clk),
     // Control in/out
     .MemRead_in(MemRead_EX),     .MemRead_out(MemRead_MEM),
-    .MemWrite_in(MemWrite_EX),    .MemWrite_out(MemWrite_MEM), // <-- CORREGIDO: Conexión original reestablecida
-    .RegWrite_in(RegWrite_EX),    .RegWrite_out(RegWrite_MEM),
-    .MemToReg_in(MemToReg_EX),    .MemToReg_out(MemToReg_MEM),
-    .Branch_in(Branch_EX),       .Branch_out(Branch_MEM),           
+    .MemWrite_in(MemWrite_EX),   .MemWrite_out(MemWrite_MEM),
+    .RegWrite_in(RegWrite_EX),   .RegWrite_out(RegWrite_MEM),
+    .MemToReg_in(MemToReg_EX),   .MemToReg_out(MemToReg_MEM),
+    .Branch_in(Branch_EX),       .Branch_out(Branch_MEM),               
     
     // Datos in/out
     .ALUResult_in(ALU_RESULT_EX),       .ALUResult_out(ALU_RESULT_MEM),
@@ -246,13 +247,13 @@ EX_MEM U_BUF_EX_MEM (
 
 // ---------------- ETAPA MEM ----------------
 
-// Compuerta AND para decidir si se toma el Branch (BEQ)
+// --- Compuerta AND para decidir si se toma el Branch ---
 assign PCSrc = Branch_MEM & Zero_MEM;
 
 ARAM U_DMEM (
     .clk(clk),
     .Dir(ALU_RESULT_MEM), 
-    .WE(MemWrite_MEM),         // <-- CORREGIDO: Regresado a la señal del pipeline
+    .WE(MemWrite_MEM),
     .RE(MemRead_MEM),
     .DatoE(RD2_MEM),
     .DatoS(READ_DATA_MEM)
@@ -280,20 +281,27 @@ MUX #(.DATA_WIDTH(32)) U_MUX_MEMTOREG (
 );
 
 // =========================================================
-// CONTROL DE RELOJ Y SIMULACIÓN
+// CONTROL DE RELOJ Y SIMULACIÓN (TESTBENCH INTEGRADO)
 // =========================================================
 
 initial begin
     clk = 1'b0;
-    rst = 1'b1;   // <-- CORREGIDO: El Reset inicia encendido para limpiar el PC
-    #15;          // Esperamos un ciclo incompleto
-    rst = 1'b0;   // <-- CORREGIDO: Apagamos el Reset para comenzar la ejecución normal
 end
 
-always #10 clk = ~clk; // Periodo de reloj de 20ns
+always #10 clk = ~clk; // Periodo de 20ns
 
 initial begin
-    #2000; 
+    // 1. Inyectamos reset al instante cero para poner a salvo el PC
+    rst = 1'b1;
+    
+    // 2. Mantenemos el reset arriba por un ciclo completo de reloj (20ns)
+    #20;
+    
+    // 3. Liberamos el reset para que comience la ejecución limpia
+    rst = 1'b0;
+    
+    // 4. Se configuró a 4000ns para permitir el cálculo completo de la ARAM
+    #4000; 
     $finish;
 end
 

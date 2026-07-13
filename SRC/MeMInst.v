@@ -10,7 +10,7 @@ reg [31:0] MeM [0:255];
 initial
 begin
     $readmemb(
-        "E:/UNIVERSIDAD CUCEI/VERANO 2026/Arquitectura/ProyectoFinal/Instrucciones.txt",
+        "E:/UNIVERSIDAD CUCEI/VERANO 2026/Arquitectura/ProyectoFinal/SRC/Instrucciones.txt",
         MeM
     );
 end

@@ -16,7 +16,7 @@ reg [31:0] banco [0:31];
 // INICIALIZACIÓN
 initial
 begin
-    $readmemb("E:/UNIVERSIDAD CUCEI/VERANO 2026/Arquitectura/ProyectoFinal/Banco.txt",banco);
+    $readmemb("E:/UNIVERSIDAD CUCEI/VERANO 2026/Arquitectura/ProyectoFinal/SRC/Banco.txt",banco);
 end
 
 // LECTURA COMBINACIONAL CORREGIDA

@@ -22,7 +22,7 @@ begin
 
     // 2. LUEGO cargamos el archivo (para que sobreescriba los ceros iniciales)
     $readmemb(
-        "E:/UNIVERSIDAD CUCEI/VERANO 2026/Arquitectura/ProyectoFinal/Memoria.txt",
+        "E:/UNIVERSIDAD CUCEI/VERANO 2026/Arquitectura/ProyectoFinal/SRC/Memoria.txt",
         MeM
     );
 end
